@@ -187,6 +187,7 @@ fun TemplateResults(state: EditorState, onRun: () -> Unit, onEdit: () -> Unit, e
         }
         // One status line: what the last run produced.
         val status = when {
+            result == null && state.size == 0L -> "" to HexColors.dim
             result == null && !state.templateArmed -> "No template for this file type. Pick one above." to HexColors.dim
             result == null -> "Not run yet" to HexColors.dim
             result.error != null -> "Error on line ${result.error.line}: ${result.error.message}" to HexColors.error

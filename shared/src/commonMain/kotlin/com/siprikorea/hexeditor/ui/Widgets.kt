@@ -34,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.SolidColor
@@ -47,6 +48,9 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
@@ -271,26 +275,29 @@ fun MoreIcon(color: Color) {
     }
 }
 
-/** The app's mark: a few byte cells with one under the cursor. Also the basis of the app icon. */
+/** The app's mark, the same "0x" monogram as the app icon (desktopApp/icons/icon.svg). */
 @Composable
 fun AppMark(modifier: Modifier = Modifier) {
+    val measurer = rememberTextMeasurer()
+    val mono = MonoStyle
     Canvas(modifier.size(20.dp)) {
-        val cell = size.width / 4.4f
-        val gap = (size.width - cell * 3) / 4
-        val r = androidx.compose.ui.geometry.CornerRadius(cell * 0.28f)
-        for (row in 0 until 3) for (col in 0 until 3) {
-            val color = when {
-                row == 1 && col == 1 -> HexColors.cursor
-                row == 0 -> HexColors.accent
-                else -> HexColors.borderStrong
-            }
-            drawRoundRect(
-                color,
-                Offset(gap + col * (cell + gap), gap + row * (cell + gap)),
-                androidx.compose.ui.geometry.Size(cell, cell),
-                r,
-            )
-        }
+        val w = size.width
+        drawRoundRect(
+            Brush.linearGradient(listOf(Color(0xFF4A86F7), Color(0xFF2652C9)), Offset.Zero, Offset(w, w)),
+            cornerRadius = androidx.compose.ui.geometry.CornerRadius(w * 0.225f),
+        )
+        val text = measurer.measure(
+            "0x",
+            mono.copy(color = Color.White, fontSize = (w * 0.4f).toSp(), fontWeight = FontWeight.ExtraBold, letterSpacing = (-0.03f * w).toSp()),
+        )
+        drawText(text, topLeft = Offset((w - text.size.width) / 2, (w - text.size.height) / 2 - w * 0.04f))
+        val barW = w * 0.515f
+        drawRoundRect(
+            Color.White.copy(alpha = 0.35f),
+            Offset((w - barW) / 2, w * 0.735f),
+            androidx.compose.ui.geometry.Size(barW, w * 0.034f),
+            androidx.compose.ui.geometry.CornerRadius(w * 0.017f),
+        )
     }
 }
 

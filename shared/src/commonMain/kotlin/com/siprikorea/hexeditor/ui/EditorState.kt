@@ -76,6 +76,13 @@ class EditorState {
     var highlights by mutableStateOf<List<Highlight>>(emptyList())
         private set
     var autoRun by mutableStateOf(true)
+
+    /**
+     * Whether the current template applies to this file: it was picked for the file's extension,
+     * or the user chose, edited or ran it. Auto-run only runs armed templates, so opening an
+     * unknown file shows plain bytes instead of a parse error from an unrelated template.
+     */
+    var templateArmed by mutableStateOf(false)
     /** Template node last clicked in the results tree. */
     var selectedNode by mutableStateOf<TemplateNode?>(null)
 
@@ -101,10 +108,12 @@ class EditorState {
         selectedNode = null
         templateResult = null
         highlights = emptyList()
-        Templates.forFileName(file.name)?.let {
+        val match = Templates.forFileName(file.name)
+        match?.let {
             templateName = it.name
             templateSource = it.source
         }
+        templateArmed = match != null
         message = "Opened ${file.name} (${formatSize(file.source.size)})"
         changed()
     }
@@ -348,6 +357,12 @@ class EditorState {
     fun loadTemplate(name: String, source: String) {
         templateName = name
         templateSource = source
+        templateArmed = true
+    }
+
+    fun editTemplate(source: String) {
+        templateSource = source
+        templateArmed = true
     }
 
     /**
@@ -355,6 +370,7 @@ class EditorState {
      * storage (no copy), and cancelling the calling coroutine stops the interpreter.
      */
     suspend fun runTemplate() {
+        templateArmed = true
         val snapshot = doc.snapshot()
         val source = templateSource
         busy = true

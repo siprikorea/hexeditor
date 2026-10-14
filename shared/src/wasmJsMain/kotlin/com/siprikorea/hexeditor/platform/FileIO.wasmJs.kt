@@ -4,6 +4,11 @@ package com.siprikorea.hexeditor.platform
 
 import com.siprikorea.hexeditor.core.ByteSource
 import com.siprikorea.hexeditor.core.Piece
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
@@ -22,9 +27,21 @@ private class JsByteSource(val id: Int, override val size: Long) : ByteSource {
 }
 
 actual suspend fun openFileDialog(): PickedFile? = suspendCoroutine { cont ->
+    jsInstallRegistry()
     jsPickFile { name, id, size ->
         cont.resume(if (name == null) null else PickedFile(name, JsByteSource(id, size.toLong()), null))
     }
+}
+
+actual fun Modifier.fileDropTarget(onHover: (Boolean) -> Unit, onDrop: (PickedFile) -> Unit): Modifier = composed {
+    val hover by rememberUpdatedState(onHover)
+    val drop by rememberUpdatedState(onDrop)
+    DisposableEffect(Unit) {
+        jsInstallRegistry()
+        jsInstallDrop({ hover(it) }) { name, id, size -> drop(PickedFile(name, JsByteSource(id, size.toLong()), null)) }
+        onDispose { jsUninstallDrop() }
+    }
+    this
 }
 
 actual suspend fun saveFile(pieces: List<Piece>, suggestedName: String, path: String?): SavedFile? {
@@ -51,22 +68,71 @@ actual suspend fun saveFile(pieces: List<Piece>, suggestedName: String, path: St
     return SavedFile(suggestedName, null, null)
 }
 
+// The input must be attached to the document: a detached one can be garbage-collected while the
+// dialog is open, and then its change event never fires.
 private fun jsPickFile(onDone: (String?, Int, Double) -> Unit): Unit = js(
     """{
     const input = document.createElement('input');
     input.type = 'file';
+    input.style.display = 'none';
+    document.body.appendChild(input);
+    const finish = (name, id, size) => { input.remove(); onDone(name, id, size); };
     input.onchange = () => {
         const f = input.files[0];
-        if (!f) { onDone(null, 0, 0); return; }
-        f.arrayBuffer().then(buf => {
-            const reg = globalThis.__hexFiles || (globalThis.__hexFiles = { next: 1, map: new Map() });
-            const id = reg.next++;
-            reg.map.set(id, new Uint8Array(buf));
-            onDone(f.name, id, buf.byteLength);
-        });
+        if (!f) { finish(null, 0, 0); return; }
+        f.arrayBuffer().then(buf => finish(f.name, globalThis.__hexRegister(buf), buf.byteLength),
+                             () => finish(null, 0, 0));
     };
-    input.oncancel = () => onDone(null, 0, 0);
+    input.oncancel = () => finish(null, 0, 0);
     input.click();
+}"""
+)
+
+/** Registers dropped files' buffers on the JS side, like [jsPickFile]. */
+private fun jsInstallDrop(onHover: (Boolean) -> Unit, onDone: (String, Int, Double) -> Unit): Unit = js(
+    """{
+    const d = globalThis.__hexDrop = { depth: 0 };
+    const hasFiles = e => e.dataTransfer && Array.from(e.dataTransfer.types).includes('Files');
+    d.enter = e => { if (!hasFiles(e)) return; e.preventDefault(); if (d.depth++ === 0) onHover(true); };
+    d.over = e => { if (!hasFiles(e)) return; e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; };
+    d.leave = e => { if (!hasFiles(e)) return; if (--d.depth <= 0) { d.depth = 0; onHover(false); } };
+    d.drop = e => {
+        if (!hasFiles(e)) return;
+        e.preventDefault();
+        d.depth = 0;
+        onHover(false);
+        const f = e.dataTransfer.files[0];
+        if (f) f.arrayBuffer().then(buf => onDone(f.name, globalThis.__hexRegister(buf), buf.byteLength));
+    };
+    window.addEventListener('dragenter', d.enter);
+    window.addEventListener('dragover', d.over);
+    window.addEventListener('dragleave', d.leave);
+    window.addEventListener('drop', d.drop);
+}"""
+)
+
+private fun jsUninstallDrop(): Unit = js(
+    """{
+    const d = globalThis.__hexDrop;
+    if (!d) return;
+    window.removeEventListener('dragenter', d.enter);
+    window.removeEventListener('dragover', d.over);
+    window.removeEventListener('dragleave', d.leave);
+    window.removeEventListener('drop', d.drop);
+    globalThis.__hexDrop = null;
+}"""
+)
+
+private fun jsInstallRegistry(): Unit = js(
+    """{
+    if (globalThis.__hexRegister) return;
+    globalThis.__hexFiles = { next: 1, map: new Map() };
+    globalThis.__hexRegister = buf => {
+        const reg = globalThis.__hexFiles;
+        const id = reg.next++;
+        reg.map.set(id, new Uint8Array(buf));
+        return id;
+    };
 }"""
 )
 

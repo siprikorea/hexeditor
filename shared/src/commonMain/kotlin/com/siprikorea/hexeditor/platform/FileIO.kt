@@ -3,6 +3,7 @@ package com.siprikorea.hexeditor.platform
 import com.siprikorea.hexeditor.core.ArrayByteSource
 import com.siprikorea.hexeditor.core.ByteSource
 import com.siprikorea.hexeditor.core.Piece
+import androidx.compose.ui.Modifier
 
 /**
  * A file chosen by the user. Its bytes are read on demand through [source], so opening is
@@ -15,6 +16,12 @@ class SavedFile(val name: String, val path: String?, val reopened: ByteSource?)
 
 /** Shows an open-file dialog; null when cancelled. */
 expect suspend fun openFileDialog(): PickedFile?
+
+/**
+ * Accepts files dragged onto the window. [onHover] reports whether a file is being dragged over
+ * it; [onDrop] receives the first dropped file.
+ */
+expect fun Modifier.fileDropTarget(onHover: (Boolean) -> Unit, onDrop: (PickedFile) -> Unit): Modifier
 
 /**
  * Streams [pieces] to [path] when given, otherwise asks the user where to save (on the web the

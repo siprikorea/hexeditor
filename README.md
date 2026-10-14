@@ -5,14 +5,19 @@ It edits binary files and parses them into structures with C-like **binary templ
 
 ## Features
 
+- **Simple layout**: the hex view and a side panel (Structure / Inspector) on rounded sheets; the template
+  editor opens only when you want to write a template (Edit, or the ⋯ menu)
+- **Open** with the Open button, Ctrl/Cmd+O, or by **dragging a file onto the window** (desktop and web)
 - **Hex/ASCII editing**: overwrite and insert modes (`Insert` key), delete/backspace, unlimited undo/redo
 - **Navigation**: arrow keys, PageUp/Down, Home/End (Ctrl+Home/End), click/drag/shift-click selection, Tab to switch panes
-- **Go to offset** (`0x1F`, `1Fh`, `31`), **find** text or hex (`50 4B 03 04`) forward and backward (F3 / Shift+F3)
+- **Go to offset** (`0x1F`, `1Fh`, `31`; Ctrl/Cmd+G), **find** text or hex (`50 4B 03 04`; Ctrl/Cmd+F) forward and
+  backward (Enter / Shift+Enter, F3 / Shift+F3)
 - **Copy/paste as hex** (Ctrl/Cmd+C, Ctrl/Cmd+V)
 - **Data inspector**: int8–uint64, float, double, binary, char, UTF-16, DOS date/time and time_t, in LE or BE
 - **Binary templates**: parse the file into a tree of structs. Clicking a node selects its bytes, and fields are
   color-highlighted in the hex view. Templates re-run automatically when the data or the template changes.
-- Built-in templates: PNG, BMP, ZIP, ELF, WAV and a syntax example. The template is picked from the file extension.
+- Built-in templates: PNG, BMP, ZIP, ELF, WAV and a syntax example. The template is picked from the file extension;
+  files with no matching template just show their bytes until you pick or write one.
 - Open/save `.bt` template files
 
 ## Large files
@@ -85,3 +90,6 @@ for (i = 0; i < header.count && !FEof(); i++)
 - Tests: `./gradlew :shared:jvmTest` (also `:shared:jsTest` and `:shared:wasmJsTest`)
 
 On the web, saving downloads the file.
+
+The app icon is drawn in `desktopApp/icons/icon.svg`; `desktopApp/icons/render.sh` regenerates the PNG, `.icns`,
+`.ico` and the web favicons from it (macOS, needs Chrome).

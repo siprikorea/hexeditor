@@ -1,11 +1,23 @@
 package com.siprikorea.hexeditor.platform
 
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.draganddrop.dragAndDropTarget
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
+import androidx.compose.ui.draganddrop.DragAndDropEvent
+import androidx.compose.ui.draganddrop.DragAndDropTarget
+import androidx.compose.ui.draganddrop.awtTransferable
 import com.siprikorea.hexeditor.core.ByteSource
 import com.siprikorea.hexeditor.core.Piece
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.awt.FileDialog
 import java.awt.Frame
+import java.awt.datatransfer.DataFlavor
 import java.io.File
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
@@ -37,6 +49,29 @@ actual suspend fun openFileDialog(): PickedFile? {
     dialog.isVisible = true
     val name = dialog.file ?: return null
     return openFile(File(dialog.directory, name))
+}
+
+@OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
+actual fun Modifier.fileDropTarget(onHover: (Boolean) -> Unit, onDrop: (PickedFile) -> Unit): Modifier = composed {
+    val hover by rememberUpdatedState(onHover)
+    val drop by rememberUpdatedState(onDrop)
+    val target = remember {
+        object : DragAndDropTarget {
+            override fun onEntered(event: DragAndDropEvent) = hover(true)
+            override fun onExited(event: DragAndDropEvent) = hover(false)
+            override fun onEnded(event: DragAndDropEvent) = hover(false)
+            override fun onDrop(event: DragAndDropEvent): Boolean {
+                hover(false)
+                val t = event.awtTransferable
+                if (!t.isDataFlavorSupported(DataFlavor.javaFileListFlavor)) return false
+                val file = (t.getTransferData(DataFlavor.javaFileListFlavor) as List<*>)
+                    .filterIsInstance<File>().firstOrNull { it.isFile } ?: return false
+                drop(openFile(file))
+                return true
+            }
+        }
+    }
+    dragAndDropTarget(shouldStartDragAndDrop = { true }, target = target)
 }
 
 actual suspend fun saveFile(pieces: List<Piece>, suggestedName: String, path: String?): SavedFile? {

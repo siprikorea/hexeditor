@@ -139,7 +139,7 @@ fun HexView(
         ) {
             drawHex(state, geo)
         }
-        Scrollbar(state, Modifier.width(12.dp).fillMaxHeight())
+        Scrollbar(state, Modifier.width(10.dp).fillMaxHeight())
     }
 }
 
@@ -173,7 +173,6 @@ private fun DrawScope.drawHex(state: EditorState, geo: Geometry) {
     val textY = (geo.rowH - g.hexByte[0].size.height) / 2
 
     // Header: column numbers.
-    drawRect(HexColors.panelAlt, Offset.Zero, Size(size.width, geo.headerH))
     for (col in 0 until bpr) {
         drawText(g.hexByte[col], HexColors.dim, Offset(geo.hexX(col), textY))
         drawText(g.digit[col % 16], HexColors.dim, Offset(geo.asciiX(col), textY))
@@ -252,7 +251,7 @@ private fun DrawScope.drawHex(state: EditorState, geo: Geometry) {
 
 @Composable
 private fun Scrollbar(state: EditorState, modifier: Modifier) {
-    Box(modifier.background(HexColors.panelAlt)) {
+    Box(modifier.background(HexColors.background)) {
         Canvas(
             Modifier.fillMaxSize().pointerInput(Unit) {
                 awaitEachGesture {
@@ -281,14 +280,14 @@ private fun Scrollbar(state: EditorState, modifier: Modifier) {
             val thumbH = maxOf(24f, (size.height.toDouble() * visible / total).toFloat())
             val maxTop = maxOf(1L, total - visible)
             val thumbY = ((size.height - thumbH) * (state.topRow.toDouble() / maxTop)).toFloat()
-            drawRoundRectCompat(Offset(2f, thumbY), Size(size.width - 4f, thumbH))
+            drawRoundRectCompat(Offset(size.width * 0.3f, thumbY), Size(size.width * 0.4f, thumbH))
         }
     }
 }
 
 private fun DrawScope.drawRoundRectCompat(topLeft: Offset, size: Size) {
     drawRoundRect(
-        HexColors.border,
+        HexColors.borderStrong,
         topLeft,
         size,
         androidx.compose.ui.geometry.CornerRadius(size.width / 2, size.width / 2),

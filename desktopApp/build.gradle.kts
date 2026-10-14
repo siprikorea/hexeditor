@@ -21,8 +21,14 @@ compose.desktop {
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "com.siprikorea.hexeditor"
+            packageName = "HexEditor"
             packageVersion = "1.0.0"
+            macOS {
+                bundleID = "com.siprikorea.hexeditor"
+                iconFile.set(project.file("icons/icon.icns"))
+            }
+            windows { iconFile.set(project.file("icons/icon.ico")) }
+            linux { iconFile.set(project.file("icons/icon.png")) }
         }
     }
 }

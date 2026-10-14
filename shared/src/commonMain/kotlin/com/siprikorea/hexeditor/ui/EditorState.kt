@@ -377,6 +377,12 @@ class EditorState {
             ?: "Template ran OK: ${lights.size} fields in $ms ms"
     }
 
+    fun clearTemplateResult() {
+        templateResult = null
+        highlights = emptyList()
+        selectedNode = null
+    }
+
     fun selectNode(node: TemplateNode) {
         selectedNode = node
         if (node.size > 0) select(node.offset, node.end - 1) else moveTo(node.offset)

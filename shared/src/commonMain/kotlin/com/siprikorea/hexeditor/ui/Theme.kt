@@ -7,6 +7,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.sp
+import hexeditor.shared.generated.resources.Res
+import hexeditor.shared.generated.resources.jetbrains_mono_regular
+import org.jetbrains.compose.resources.Font
 
 object HexColors {
     val background = Color(0xFF1E1F22)
@@ -38,7 +41,18 @@ object HexColors {
     )
 }
 
-val MonoStyle = TextStyle(fontFamily = FontFamily.Monospace, fontSize = 13.sp, color = HexColors.text)
+/**
+ * Monospaced text uses bundled JetBrains Mono: the web has no system monospace font, and
+ * bundling it makes every platform look the same. Ligatures are off so code reads literally.
+ */
+val MonoStyle: TextStyle
+    @Composable get() = TextStyle(
+        fontFamily = FontFamily(Font(Res.font.jetbrains_mono_regular)),
+        fontSize = 13.sp,
+        color = HexColors.text,
+        fontFeatureSettings = "liga 0, calt 0",
+    )
+
 val UiStyle = TextStyle(fontSize = 13.sp, color = HexColors.text)
 
 @Composable

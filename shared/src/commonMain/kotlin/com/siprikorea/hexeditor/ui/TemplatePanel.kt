@@ -66,7 +66,7 @@ fun TemplateEditor(
             ToolButton("Open .bt", onOpenTemplate)
             ToolButton("Save .bt", onSaveTemplate)
             ToolButton("Auto", { state.autoRun = !state.autoRun }, active = state.autoRun)
-            ToolButton("▶ Run", onRun)
+            ToolButton("Run", onRun)
         }
         CodeEditor(
             state.templateSource,

@@ -82,7 +82,9 @@ fun HexView(
     modifier: Modifier = Modifier,
 ) {
     val measurer = rememberTextMeasurer(cacheSize = 0)
-    val glyphs = remember(measurer) { Glyphs(measurer, MonoStyle) }
+    // Keyed on the style too: on the web the font loads asynchronously and the glyphs must be re-measured.
+    val mono = MonoStyle
+    val glyphs = remember(measurer, mono) { Glyphs(measurer, mono) }
     val geo = remember(glyphs, state.offsetDigits) { Geometry(glyphs, state.bytesPerRow, state.offsetDigits) }
 
     val wheelAccumulator = remember { floatArrayOf(0f) }

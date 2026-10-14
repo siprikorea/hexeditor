@@ -96,6 +96,12 @@ fun App(initialFile: PickedFile? = null, onTitleChange: (String) -> Unit = {}) {
     // Re-run the template shortly after the data or the template changes.
     LaunchedEffect(state.version, state.templateSource, state.autoRun) {
         if (!state.autoRun) return@LaunchedEffect
+        // An empty file can't match any template; don't greet the user with a parse error.
+        if (state.size == 0L) {
+            templateJob?.cancel()
+            state.clearTemplateResult()
+            return@LaunchedEffect
+        }
         delay(300)
         runTemplate()
     }
@@ -165,8 +171,8 @@ fun App(initialFile: PickedFile? = null, onTitleChange: (String) -> Unit = {}) {
                 Spacer(Modifier.width(10.dp))
                 InputField(findText, { findText = it }, if (findHex) "Find hex: 50 4B" else "Find text", { shift -> find(forward = !shift) }, Modifier.width(180.dp))
                 ToolButton("Hex", { findHex = !findHex }, active = findHex)
-                ToolButton("◀", { find(forward = false) })
-                ToolButton("▶", { find(forward = true) })
+                ToolButton("Prev", { find(forward = false) })
+                ToolButton("Next", { find(forward = true) })
             }
 
             // ---- hex view + inspector
@@ -225,7 +231,7 @@ private fun StatusBar(state: EditorState) {
         )
         Box(Modifier.weight(1f))
         Text(
-            (if (state.busy) "⏳ " else "") + state.message,
+            (if (state.busy) "[working] " else "") + state.message,
             style = UiStyle.copy(color = HexColors.dim),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,

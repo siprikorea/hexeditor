@@ -3,6 +3,9 @@
 A Kotlin Multiplatform (Compose Multiplatform) hex editor, inspired by 010 Editor, for Desktop (JVM) and Web (JS / Wasm).
 It edits binary files and parses them into structures with C-like **binary templates**.
 
+**Try it in the browser: https://siprikorea.github.io/hexeditor/** (files stay on your device; needs a browser with
+WebAssembly GC, e.g. recent Chrome, Firefox or Safari 18.2+)
+
 ## Features
 
 - **Simple layout**: the hex view and a side panel (Structure / Inspector) on rounded sheets; the template
@@ -89,7 +92,8 @@ for (i = 0; i < header.count && !FEof(); i++)
 - Web (JS): `./gradlew :webApp:jsBrowserDevelopmentRun`
 - Tests: `./gradlew :shared:jvmTest` (also `:shared:jsTest` and `:shared:wasmJsTest`)
 
-On the web, saving downloads the file.
+On the web, saving downloads the file. Every push to `main` deploys the Wasm build to GitHub Pages
+(`.github/workflows/pages.yml`).
 
 The app icon is drawn in `desktopApp/icons/icon.svg`; `desktopApp/icons/render.sh` regenerates the PNG, `.icns`,
 `.ico` and the web favicons from it (macOS, needs Chrome).
